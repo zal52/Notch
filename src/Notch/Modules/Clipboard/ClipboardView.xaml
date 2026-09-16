@@ -1,0 +1,42 @@
+<UserControl x:Class="Notch.Modules.Clipboard.ClipboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="28" /></Grid.RowDefinitions>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
+            <TextBlock Text="&#xE77F;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="#AEAEB6" HorizontalAlignment="Center" Margin="0,0,0,12" />
+            <TextBlock Text="{Binding EmptyTitle}" FontSize="14" FontWeight="Medium" TextAlignment="Center" />
+            <TextBlock Text="{Binding EmptyDescription}" FontSize="11" Foreground="{StaticResource TextSecondary}" TextAlignment="Center" Margin="0,7,0,0" />
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource NotchButton}" Background="#161618" Padding="10,8" Margin="0,0,0,5"
+                                HorizontalContentAlignment="Stretch" ToolTip="Скопировать"
+                                Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}" AutomationProperties.Name="{Binding Preview}">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="24" /></Grid.ColumnDefinitions>
+                                <Image Source="{Binding Thumbnail}" Width="48" Height="32" Stretch="Uniform" Margin="0,0,10,0"
+                                       Visibility="{Binding IsImage, Converter={StaticResource BoolVisibility}}" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Preview}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" Foreground="{StaticResource TextSecondary}" FontSize="10" Margin="0,4,0,0" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#85858D" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <Grid Grid.Row="1" Margin="3,4,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="26" /></Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Footer}" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Footer}" />
+            <Button Grid.Column="1" Style="{StaticResource IconButton}" Content="&#xE74D;" Command="{Binding ClearCommand}"
+                    ToolTip="Очистить историю" AutomationProperties.Name="Очистить историю" />
+        </Grid>
+    </Grid>
+</UserControl>

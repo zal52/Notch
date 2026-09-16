@@ -1,0 +1,9 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:translator="clr-namespace:Notch.Modules.Translator"
+                    xmlns:clipboard="clr-namespace:Notch.Modules.Clipboard"
+                    xmlns:screenshots="clr-namespace:Notch.Modules.Screenshots">
+    <DataTemplate DataType="{x:Type translator:TranslatorViewModel}"><translator:TranslatorView /></DataTemplate>
+    <DataTemplate DataType="{x:Type clipboard:ClipboardViewModel}"><clipboard:ClipboardView /></DataTemplate>
+    <DataTemplate DataType="{x:Type screenshots:ScreenshotViewModel}"><screenshots:ScreenshotView /></DataTemplate>
+</ResourceDictionary>

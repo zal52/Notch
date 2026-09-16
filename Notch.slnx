@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Notch/Notch.csproj" />
+  <Project Path="tests/Notch.Tests/Notch.Tests.csproj" />
+</Solution>

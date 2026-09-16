@@ -1,0 +1,55 @@
+<UserControl x:Class="Notch.Modules.Screenshots.ScreenshotView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="32" /><RowDefinition Height="*" /><RowDefinition Height="18" /></Grid.RowDefinitions>
+        <Button Style="{StaticResource NotchButton}" Command="{Binding CaptureCommand}" Background="#1B1B1E"
+                HorizontalAlignment="Left" Padding="9,5" VerticalAlignment="Top" AutomationProperties.Name="Снять основной экран">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE722;" FontFamily="Segoe MDL2 Assets" FontSize="12" Margin="0,1,7,0" />
+                <TextBlock Text="Снять экран" FontSize="11" />
+            </StackPanel>
+        </Button>
+        <TextBlock Text="{Binding AutoCaptureLabel}" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                   HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,3,0" ToolTip="Новые изображения из буфера появляются здесь автоматически" />
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolVisibility}}">
+            <TextBlock Text="&#xE722;" FontFamily="Segoe MDL2 Assets" FontSize="26" Foreground="#AEAEB6" HorizontalAlignment="Center" Margin="0,0,0,12" />
+            <TextBlock Text="Снимков пока нет" FontSize="14" FontWeight="Medium" TextAlignment="Center" />
+            <TextBlock Text="{Binding EmptyHint}" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,7,0,0" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#161618" CornerRadius="9" Padding="5" Margin="0,0,0,4">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="78" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Button Style="{StaticResource NotchButton}" Padding="0" Margin="0,0,8,0" ToolTip="Открыть снимок"
+                                        Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                        AutomationProperties.Name="Открыть снимок">
+                                    <Image Source="{Binding Thumbnail}" Width="68" Height="34" Stretch="Uniform" />
+                                </Button>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Detail}" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="3,0,0,2" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource IconButton}" Height="20" Content="&#xE8C8;" ToolTip="Копировать" AutomationProperties.Name="Копировать снимок"
+                                                Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <Button Style="{StaticResource IconButton}" Height="20" Content="&#xE8A7;" ToolTip="Открыть" AutomationProperties.Name="Открыть снимок"
+                                                Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <Button Style="{StaticResource IconButton}" Height="20" Content="&#xE74E;" ToolTip="Сохранить PNG" AutomationProperties.Name="Сохранить снимок"
+                                                Command="{Binding DataContext.SaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <Button Style="{StaticResource IconButton}" Height="20" Content="&#xE74D;" ToolTip="Удалить из истории" AutomationProperties.Name="Удалить снимок"
+                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <TextBlock Grid.Row="2" Text="{Binding Status}" FontSize="10" Foreground="{StaticResource TextSecondary}"
+                   Margin="3,4,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Status}" />
+    </Grid>
+</UserControl>

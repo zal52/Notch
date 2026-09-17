@@ -35,7 +35,8 @@
    </Grid>
   </Border>
   <Border Grid.Row="2" Background="#151517" CornerRadius="9" Margin="0,3,0,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="28"/></Grid.ColumnDefinitions><TextBox Text="{Binding Result, Mode=OneWay}" IsReadOnly="True" AutomationProperties.Name="Результат перевода"/><Button Grid.Column="1" VerticalAlignment="Top" Margin="0,3,3,0" Content="&#xE8C8;" Style="{StaticResource IconButton}" Command="{Binding CopyCommand}" ToolTip="Скопировать перевод"/></Grid></Border>
-  <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" ToolTip="{Binding Status}" FontSize="9" Foreground="#99999F" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,5,0"/><Button Grid.Column="1" Content="Перевести" FontSize="11" Padding="10,3" Background="#242427" Style="{StaticResource NotchButton}" Command="{Binding TranslateCommand}" ToolTip="Ctrl+Enter · До 500 байт текста за перевод. MyMemory: 5 000 символов в сутки без ключа."/></Grid>
+  <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" ToolTip="{Binding Status}" FontSize="9" Foreground="#99999F" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,5,0"/><Button Grid.Column="1" Content="Перевести" FontSize="11" Padding="10,3" Background="#242427" Style="{StaticResource NotchButton}" Command="{Binding TranslateCommand}" ToolTip="Перевести · Ctrl+Enter"/></Grid>
  </Grid>
 </UserControl>
+
 

@@ -18,7 +18,7 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     private readonly ITranslationService _service;
     private readonly IClipboardService _clipboard;
     private CancellationTokenSource? _request;
-    private string _input = "", _result = "", _status = "MyMemory · текст отправляется онлайн";
+    private string _input = "", _result = "", _status = "Текст переводится онлайн";
     private TranslationLanguage _source = SourceLanguages[1], _target = SourceLanguages[0];
     private bool _busy, _disposed;
     private int _revision;
@@ -41,7 +41,7 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     private void Invalidate()
     {
         _revision++; _request?.Cancel(); Result = "";
-        Status = Encoding.UTF8.GetByteCount(Input) > MyMemoryTranslationService.MaximumUtf8Bytes ? "Сократите текст: максимум 500 байт UTF-8" : "MyMemory · текст отправляется онлайн";
+        Status = Encoding.UTF8.GetByteCount(Input) > MyMemoryTranslationService.MaximumUtf8Bytes ? "Текст слишком длинный. Переведите его по частям." : "Текст переводится онлайн";
         TranslateCommand.NotifyCanExecuteChanged();
     }
     private async Task TranslateAsync()
@@ -60,7 +60,7 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
         catch (TranslationServiceException ex) { if (revision == _revision && !_disposed) Status = ex.Message; }
         catch (OperationCanceledException) { if (revision == _revision && !_disposed) Status = "Перевод отменён или истекло время ожидания"; }
         catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or InvalidOperationException or NotSupportedException or System.IO.IOException)
-        { if (revision == _revision && !_disposed) Status = ex is NotSupportedException ? "Сервис перевода пока не подключён" : "Не удалось перевести. Попробуйте ещё раз."; }
+        { if (revision == _revision && !_disposed) Status = ex is NotSupportedException ? "Перевод временно недоступен" : "Не удалось перевести. Попробуйте ещё раз."; }
         finally { if (ReferenceEquals(_request, cancellation)) _request = null; IsBusy = false; }
     }
     private async Task CopyAsync()
@@ -77,4 +77,5 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     public void Cancel() { _revision++; _request?.Cancel(); if (IsBusy) Status = "Перевод отменён"; }
     public void Dispose() { _disposed = true; Cancel(); }
 }
+
 

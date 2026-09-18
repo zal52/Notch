@@ -2,9 +2,11 @@
 
 Windows desktop shell inspired by Dynamic Island. C# / .NET 10 / WPF / MVVM.
 
+Before uploading, read [publication guidance](PUBLISHING.md) and [security and privacy](SECURITY.md). Original Notch source is not currently offered under an open-source license.
+
 ## Current milestone
 
-Roadmap stages 1–6 and the screenshot stage are implemented: the compact shell, module catalog, persistent preferences, global hotkey, text clipboard history, and screenshots. Translator remains a placeholder; general image clipboard history is still deferred.
+Implemented: compact shell, module catalog, preferences, global hotkey, text/image clipboard history, recent screenshots and online translation. This is a development build; distribution packaging and broader hardware testing remain pending.
 
 - Black rounded panel at the top center of the primary display.
 - Monochrome, reduced chrome: 112×28 DIPs collapsed, 320×136 expanded, 360×260 for standard modules (previously 152×36, 460×244, and 520×350).
@@ -22,7 +24,7 @@ Roadmap stages 1–6 and the screenshot stage are implemented: the compact shell
 - Capture the primary screen, retain the three newest screenshots, and copy/open/save/delete each one inside the notch.
 - A per-session mutex prevents duplicate application instances.
 
-**Still deferred:** startup registration and an installer. Translator now has source/target selection, text input, swap, Ctrl+Enter, selectable output and copy. MyMemory supplies online translation without an API key. Text is sent only when Translate or Ctrl+Enter is used; source language is selected explicitly. Requests are limited to 500 UTF-8 bytes (Cyrillic uses more bytes than ASCII), and anonymous service usage is limited to 5,000 characters/day. The app reports quota and network errors without showing error payloads as translations. Provider documentation: https://mymemory.translated.net/doc/spec.php and https://mymemory.translated.net/doc/usagelimits.php.
+**Still deferred:** public backend deployment, user authentication, startup registration and an installer. Translation now goes through the separate Notch.Backend service. The desktop contains only the backend client and shared contracts; MyMemory integration and optional provider credentials are server-side. See [backend setup](BACKEND.md) for local startup and production requirements.
 
 ## Run
 
@@ -35,6 +37,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run.ps1
 The launcher prefers a project-local SDK in `.tools/dotnet`, otherwise it uses `dotnet` from PATH. The initial development checkout has a local SDK; it is deliberately excluded from Git. Restore requires access to NuGet. For an existing build, use `scripts/run.ps1 -NoBuild`.
 
 The binary is framework-dependent. Opening `Notch.exe` directly requires the .NET 10 Desktop Runtime to be discoverable by the app host; the script sets `DOTNET_ROOT` for the local SDK. A distributable self-contained build is a later milestone.
+
+Notch automatically starts its bundled local translation backend when no `NOTCH_BACKEND_URL` is set. For another Windows x64 computer, run `scripts/publish.ps1` and copy the entire `dist/Notch-win-x64` folder; launch `Notch.exe`. Both runtimes are included. See [BACKEND.md](BACKEND.md).
 
 Click the small notch or press **Ctrl+Alt+N** to open the module catalog. The same hotkey collapses an open panel. Escape returns to the catalog, then collapses the panel. Right-click the panel to toggle Topmost, animation, or clipboard monitoring, or to exit. The system tray menu can reopen or hide Notch; double-clicking its icon opens the catalog. Alt+F4 exits cleanly. If another application owns the hotkey, Notch continues running and reports the conflict; use the tray to open it.
 
@@ -64,13 +68,13 @@ The initial GDI backend includes layered windows but has no region selection, cu
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test.ps1
 ```
 
-The 56 tests cover shell navigation, clipboard behavior, settings, native registration, screenshot retention/cancellation/failure recovery, image-copy routing, and file-export safety. A WPF integration test renders the real views, checks page scrolling with the custom scrollbar, and runs all screenshot commands against synthetic images while exercising real hide/restore/compositor behavior. It does not read or replace the user's clipboard. Set `NOTCH_ARTIFACTS` to save UI renders. Set `NOTCH_LIVE_CAPTURE=1` to additionally verify the real GDI capture; those desktop pixels stay in memory and are not written to artifacts. Mixed-monitor/HDR behavior and actual external image-viewer/paste compatibility still need broader testing.
+The 65 tests cover shell navigation, clipboard behavior, settings, native registration, screenshot retention/cancellation/failure recovery, image-copy routing, and file-export safety. A WPF integration test renders the real views, checks page scrolling with the custom scrollbar, and runs all screenshot commands against synthetic images while exercising real hide/restore/compositor behavior. It does not read or replace the user's clipboard. Set `NOTCH_ARTIFACTS` to save UI renders. Set `NOTCH_LIVE_CAPTURE=1` to additionally verify the real GDI capture; those desktop pixels stay in memory and are not written to artifacts. Mixed-monitor/HDR behavior and actual external image-viewer/paste compatibility still need broader testing.
 
 ## Architecture
 
 `App` is the composition root and owns process lifetime. `ShellViewModel` owns the single `ShellState`. `NotchWindow` handles presentation only. `ModuleCatalog` maps IDs to lazy module factories. WPF data templates resolve ViewModels to views. Native APIs are isolated in `Infrastructure/Windows`; transitions live in `Presentation/Behaviors`.
 
-Module lifecycle calls run on the UI dispatcher. Activation must honor cancellation and leave deactivation safe after partial initialization. `ApplicationCoordinator` owns preferences, hotkey registration and monitoring lifetime. `NativeMessageWindow` supplies an invisible message-only HWND shared by the native services. Clipboard service events run on the owning STA/UI context. The screenshot service coordinates `IScreenshotCaptureBackend`, `ICaptureVisibility` and `IScreenshotFiles`; view code owns presentation and the file picker is an injected OS adapter. Policies can be tested without reading the desktop or clipboard. Translation uses a replaceable ITranslationService implemented by MyMemoryTranslationService. Input or language changes invalidate prior results and cancel pending work; leaving the module cancels the request.
+Module lifecycle calls run on the UI dispatcher. Activation must honor cancellation and leave deactivation safe after partial initialization. `ApplicationCoordinator` owns preferences, hotkey registration and monitoring lifetime. `NativeMessageWindow` supplies an invisible message-only HWND shared by the native services. Clipboard service events run on the owning STA/UI context. The screenshot service coordinates `IScreenshotCaptureBackend`, `ICaptureVisibility` and `IScreenshotFiles`; view code owns presentation and the file picker is an injected OS adapter. Policies can be tested without reading the desktop or clipboard. Translation uses ITranslationService: BackendTranslationService in the desktop, MyMemoryTranslationService only in the separate backend. Input or language changes invalidate prior results and cancel pending work; leaving the module cancels the request.
 
 ### Add a module
 
@@ -90,7 +94,10 @@ No changes to `NotchWindow`, its code-behind, or the navigation state machine ar
 - A second launch exits without creating another window; use the hotkey or tray to reopen the first instance.
 - Windows 10 edition/build support must be specified before distribution. Current .NET support policies do not cover every Windows 10 edition.
 
-Next: startup registration and distribution packaging. Set NOTCH_LIVE_TRANSLATION=1 to exercise MyMemory using the synthetic Hello world phrase, including the WPF input/result/copy flow. Ordinary tests do not make translation network calls.
+Next: remote backend deployment with user authentication, startup registration and distribution packaging. Set NOTCH_LIVE_TRANSLATION=1 to exercise MyMemory using the synthetic Hello world phrase, including the WPF input/result/copy flow. Ordinary tests do not make translation network calls.
+
+
+
 
 
 

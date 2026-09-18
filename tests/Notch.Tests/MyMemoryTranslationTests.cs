@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using Notch.Services.Contracts;
-using Notch.Services.Translation;
+using Notch.Backend.Translation;
 using Xunit;
 namespace Notch.Tests;
 public sealed class MyMemoryTranslationTests
@@ -62,3 +62,4 @@ public sealed class MyMemoryTranslationTests
   { Uri = request.RequestUri; return Task.FromResult(new HttpResponseMessage(Status) { Content = new StringContent(body) }); }
  }
 }
+

@@ -26,6 +26,8 @@ public partial class App : Application
         {
             _services = new ServiceCollection().AddNotch().BuildServiceProvider(
                 new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+            if (Environment.GetEnvironmentVariable("NOTCH_BACKEND_URL") is null)
+                await _services.GetRequiredService<Notch.Services.Translation.LocalBackendProcess>().StartAsync(CancellationToken.None);
             var window = _services.GetRequiredService<NotchWindow>();
             MainWindow = window;
             window.ExitRequested += (_, _) => ExitApplication();
@@ -64,3 +66,4 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+

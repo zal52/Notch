@@ -6,13 +6,13 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Notch.Services.Contracts;
-namespace Notch.Services.Translation;
+namespace Notch.Backend.Translation;
 
-public sealed class TranslationServiceException(string message) : Exception(message);
 
-public sealed class MyMemoryTranslationService(HttpClient client) : ITranslationService
+
+public sealed class MyMemoryTranslationService(HttpClient client, string? providerKey = null) : ITranslationService
 {
-    public const int MaximumUtf8Bytes = 500;
+    public const int MaximumUtf8Bytes = TranslationLimits.MaximumUtf8Bytes;
     public async Task<TranslationResult> TranslateAsync(TranslationRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -24,6 +24,7 @@ public sealed class MyMemoryTranslationService(HttpClient client) : ITranslation
         if (request.SourceLanguage == request.TargetLanguage) return new(request.Text, request.SourceLanguage);
         var uri = "https://api.mymemory.translated.net/get?q=" + Uri.EscapeDataString(request.Text)
             + "&langpair=" + Uri.EscapeDataString(request.SourceLanguage + "|" + request.TargetLanguage);
+        if (!string.IsNullOrWhiteSpace(providerKey)) uri += "&key=" + Uri.EscapeDataString(providerKey);
         using var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
             throw new TranslationServiceException("Лимит переводов исчерпан. Попробуйте позже.");
@@ -34,6 +35,7 @@ public sealed class MyMemoryTranslationService(HttpClient client) : ITranslation
         {
             using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
             var root = json.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) throw new TranslationServiceException("Invalid provider response.");
             if (root.TryGetProperty("quotaFinished", out var quota) && quota.ValueKind == JsonValueKind.True)
                 throw new TranslationServiceException("Достигнут дневной лимит переводов");
             if (!root.TryGetProperty("responseStatus", out var status) || status.ToString() != "200")
@@ -48,4 +50,5 @@ public sealed class MyMemoryTranslationService(HttpClient client) : ITranslation
     }
     private static bool Supported(string? language) => language is "ru" or "en" or "lv" or "de" or "fr" or "es" or "uk";
 }
+
 

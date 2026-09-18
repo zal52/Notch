@@ -1,4 +1,7 @@
 <Solution>
   <Project Path="src/Notch/Notch.csproj" />
   <Project Path="tests/Notch.Tests/Notch.Tests.csproj" />
+  <Project Path="src/Notch.Translation/Notch.Translation.csproj" />
+  <Project Path="src/Notch.Backend/Notch.Backend.csproj" />
 </Solution>
+

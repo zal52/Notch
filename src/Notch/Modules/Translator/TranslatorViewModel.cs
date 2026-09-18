@@ -25,7 +25,7 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     public TranslatorViewModel(ITranslationService service, IClipboardService clipboard)
     {
         _service = service; _clipboard = clipboard;
-        TranslateCommand = new AsyncRelayCommand(TranslateAsync, () => !_disposed && !IsBusy && !string.IsNullOrWhiteSpace(Input) && Encoding.UTF8.GetByteCount(Input) <= MyMemoryTranslationService.MaximumUtf8Bytes);
+        TranslateCommand = new AsyncRelayCommand(TranslateAsync, () => !_disposed && !IsBusy && !string.IsNullOrWhiteSpace(Input) && Encoding.UTF8.GetByteCount(Input) <= TranslationLimits.MaximumUtf8Bytes);
         CopyCommand = new AsyncRelayCommand(CopyAsync, () => !_disposed && Result.Length > 0);
         SwapCommand = new RelayCommand(Swap, () => Source.Code is not null);
     }
@@ -41,7 +41,7 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     private void Invalidate()
     {
         _revision++; _request?.Cancel(); Result = "";
-        Status = Encoding.UTF8.GetByteCount(Input) > MyMemoryTranslationService.MaximumUtf8Bytes ? "Текст слишком длинный. Переведите его по частям." : "Текст переводится онлайн";
+        Status = Encoding.UTF8.GetByteCount(Input) > TranslationLimits.MaximumUtf8Bytes ? "Текст слишком длинный. Переведите его по частям." : "Текст переводится онлайн";
         TranslateCommand.NotifyCanExecuteChanged();
     }
     private async Task TranslateAsync()
@@ -77,5 +77,6 @@ public sealed class TranslatorViewModel : ObservableObject, IDisposable
     public void Cancel() { _revision++; _request?.Cancel(); if (IsBusy) Status = "Перевод отменён"; }
     public void Dispose() { _disposed = true; Cancel(); }
 }
+
 
 

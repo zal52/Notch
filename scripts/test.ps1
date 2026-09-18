@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 $notchRoot = Split-Path -Parent $PSScriptRoot
 $localDotnet = Join-Path $notchRoot '.tools\dotnet\dotnet.exe'
 $dotnetCommand = if (Test-Path -LiteralPath $localDotnet) { $localDotnet } else { (Get-Command dotnet -ErrorAction Stop).Source }
+$env:DOTNET_ROOT = Split-Path -Parent $dotnetCommand
 $env:DOTNET_CLI_HOME = Join-Path $notchRoot '.tools\cli'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE = 'false'
@@ -14,3 +15,4 @@ try {
 } finally {
     Pop-Location
 }
+

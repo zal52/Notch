@@ -45,8 +45,12 @@ public static class ServiceRegistration
         services.AddSingleton<IScreenshotService, ScreenshotService>();
         services.AddSingleton<ClipboardScreenshotBridge>();
         services.AddSingleton<ScreenshotViewModel>();
-        services.AddSingleton(_ => new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) });
-        services.AddSingleton<ITranslationService, Notch.Services.Translation.MyMemoryTranslationService>();
+        services.AddSingleton(_ => new System.Net.Http.HttpClient(new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }) { Timeout = TimeSpan.FromSeconds(15) });
+        services.AddSingleton<Notch.Services.Translation.LocalBackendProcess>();
+        services.AddSingleton<ITranslationService>(provider => new Notch.Services.Translation.BackendTranslationService(
+            provider.GetRequiredService<System.Net.Http.HttpClient>(),
+            Environment.GetEnvironmentVariable("NOTCH_BACKEND_URL") ?? provider.GetRequiredService<Notch.Services.Translation.LocalBackendProcess>().Endpoint,
+            Environment.GetEnvironmentVariable("NOTCH_BACKEND_URL") is null ? provider.GetRequiredService<Notch.Services.Translation.LocalBackendProcess>().Token : null));
         services.AddSingleton<TranslatorViewModel>();
         services.AddSingleton<ApplicationCoordinator>();
         services.AddModule<TranslatorModule>(TranslatorModule.Metadata);
@@ -66,5 +70,7 @@ public static class ServiceRegistration
         return services;
     }
 }
+
+
 
 

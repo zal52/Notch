@@ -31,13 +31,15 @@ public sealed class WpfSmokeTests
             var dispatcher = Dispatcher.CurrentDispatcher;
             dispatcher.BeginInvoke(new Action(async () =>
             {
-                App? app = null;
+                Application? app = null;
                 ServiceProvider? services = null;
                 NotchWindow? window = null;
+                Exception? failure = null;
                 try
                 {
-                    app = new App();
-                    app.InitializeComponent();
+                    app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+                    app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Notch;component/Presentation/Themes/NotchTheme.xaml", UriKind.Relative) });
+                    app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/Notch;component/Modules/ModuleTemplates.xaml", UriKind.Relative) });
                     var fakeClipboard = new FakeTextClipboardPlatform();
                     var fakeImages = new FakeImageClipboard();
                     var fakeCapture = new FakeScreenshotBackend { Frame = MakeSampleImage() };
@@ -221,15 +223,21 @@ public sealed class WpfSmokeTests
                     using (hotkeys.Register(gesture, () => { }))
                         Assert.Throws<System.ComponentModel.Win32Exception>(() => hotkeys.Register(gesture, () => { }));
                     using (hotkeys.Register(gesture, () => { })) { }
-                    finished.SetResult();
+
                 }
-                catch (Exception exception) { finished.TrySetException(exception); }
+                catch (Exception exception) { failure = exception; }
                 finally
                 {
-                    if (window is not null) { window.AllowClose = true; window.Close(); }
-                    if (services is not null) await services.DisposeAsync();
-                    app?.Shutdown();
-                    dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+                    try
+                    {
+                        if (window is not null) { window.AllowClose = true; window.Close(); }
+                        if (services is not null) await services.DisposeAsync();
+                        app?.Shutdown();
+                    }
+                    catch (Exception exception) { failure ??= exception; }
+                    dispatcher.InvokeShutdown();
+                    if (failure is not null) finished.TrySetException(failure);
+                    else finished.TrySetResult();
                 }
             }));
             Dispatcher.Run();
@@ -240,7 +248,7 @@ public sealed class WpfSmokeTests
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)), "WPF test thread did not shut down.");
     }
 
-    private static async Task SettleAsync(Window window)
+private static async Task SettleAsync(Window window)
     {
         await Task.Delay(320);
         await window.Dispatcher.InvokeAsync(window.UpdateLayout, DispatcherPriority.Render);
@@ -301,3 +309,9 @@ public sealed class WpfSmokeTests
         encoder.Save(stream);
     }
 }
+
+
+
+
+
+

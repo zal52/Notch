@@ -13,7 +13,17 @@
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../Notch.Backend/Notch.Backend.csproj" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="../Notch.Translation/Notch.Translation.csproj" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
   </ItemGroup>
+  <Target Name="CopyLocalBackend" AfterTargets="Build">
+    <ItemGroup>
+      <LocalBackendFiles Include="../Notch.Backend/bin/$(Configuration)/net10.0/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LocalBackendFiles)" DestinationFolder="$(OutDir)backend" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
+
+
